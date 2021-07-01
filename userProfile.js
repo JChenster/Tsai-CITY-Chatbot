@@ -1,7 +1,11 @@
 class UserProfile {
-    constructor(name, pathway){
+    constructor(name, entrepreneurScore, intrapreneurScore, explorerScore, civicInnovatorScore, artistScore){
         this.name = name;
-        this.pathway = pathway;
+        this.entrepreneurScore = entrepreneurScore;
+        this.intrapreneurScore = intrapreneurScore;
+        this.explorerScore = explorerScore;
+        this.civicInnovatorScore = civicInnovatorScore;
+        this.artistScore = artistScore;
     }
 }
 
