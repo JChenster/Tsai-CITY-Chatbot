@@ -12,14 +12,14 @@ const restify = require('restify');
 const { BotFrameworkAdapter, MemoryStorage, ConversationState, UserState } = require('botbuilder');
 
 // Import custom classes
-const { UserPathwaysDialog } = require('./dialogs/userPathwaysDialog')
-const { PathwaysDialogBot } = require('./bots/pathwaysDialogBot')
+const { UserPathwaysDialog } = require('./dialogs/userPathwaysDialog');
+const { PathwaysDialogBot } = require('./bots/pathwaysDialogBot');
 
-// Store information about 
+// Store information about
 // a user, accessible across all conversation
 // a conversation, allowing the bot to track the progress of it
 const memoryStorage = new MemoryStorage();
-const conversationState = new ConversationState(memoryStorage)
+const conversationState = new ConversationState(memoryStorage);
 const userState = new UserState(memoryStorage);
 
 // Use custom classes
