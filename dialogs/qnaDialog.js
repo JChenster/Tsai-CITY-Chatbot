@@ -1,3 +1,4 @@
+const { MessageFactory } = require('botbuilder');
 const { QnAMakerDialog } = require('botbuilder-ai');
 const {
     ComponentDialog,
@@ -13,7 +14,8 @@ const QNAMAKER_BASE_DIALOG = 'QNAMAKER_BASE_DIALOG';
 * Creates QnAMakerDialog instance with provided configuraton values.
 */
 const createQnAMakerDialog = (knowledgeBaseId, endpointKey, endpointHostName) => {
-    const qnaMakerDialog = new QnAMakerDialog(knowledgeBaseId, endpointKey, endpointHostName);
+    const noAnswer = MessageFactory.text('No answer could be found...');
+    const qnaMakerDialog = new QnAMakerDialog(knowledgeBaseId, endpointKey, endpointHostName, noAnswer);
     qnaMakerDialog.id = QNAMAKER_BASE_DIALOG;
     return qnaMakerDialog;
 };
@@ -56,7 +58,8 @@ class QNADialog extends ComponentDialog {
     // This is the first step of the WaterfallDialog.
     // It kicks off the dialog with the QnA Maker with provided options.
     async startInitialDialog(step) {
-        return await step.beginDialog(QNAMAKER_BASE_DIALOG);
+        await step.beginDialog(QNAMAKER_BASE_DIALOG);
+        return await step.context.sendActivity('Ask another question:');
     }
 }
 
