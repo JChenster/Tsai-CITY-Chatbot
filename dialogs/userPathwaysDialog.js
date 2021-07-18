@@ -75,7 +75,6 @@ class UserPathwaysDialog extends ComponentDialog {
         step.values.name = step.result;
         // Greet user
         await step.context.sendActivity(`Welcome ${ step.values.name }!`);
-        // Replace with nicer looking card
         await step.context.sendActivity(
             'How would you describe your interest in Tsai CITY?\n\n' +
             'A. I’m just curious\n\n' +
@@ -144,6 +143,7 @@ class UserPathwaysDialog extends ComponentDialog {
         }, {});
 
         // Update user profile
+        // userState now contains a UserProfile object with information on the user
         const userProfile = await this.userProfile.get(step.context, new UserProfile());
         userProfile.name = step.values.name;
         userProfile.entrepreneurScore = typeof profileScores[ENTREPRENEUR_KEY] === 'undefined' ? 0 : profileScores[ENTREPRENEUR_KEY];
@@ -163,6 +163,7 @@ class UserPathwaysDialog extends ComponentDialog {
         return await step.endDialog();
     }
 
+    // Generates list of capital letters representing options
     async genenerateAnswerChoices(numChoices) {
         const arr = [...Array(numChoices).keys()];
         return arr.map(x => String.fromCharCode('A'.charCodeAt(0) + x));
