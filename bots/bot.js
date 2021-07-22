@@ -49,43 +49,55 @@ class Bot extends ActivityHandler {
             const flow = await this.operationState.get(context, { currentOperation: operations.none });
             console.log('Current operation: ' + flow.currentOperation);
 
-            switch (flow.currentOperation) {
-            // No operation is set
-            case operations.none: {
-                // Set up the necessary operation based on input
-                switch (context.activity.text) {
-                case 'Quiz': {
-                    flow.currentOperation = operations.quiz;
-                    await this.userState.saveChanges(context, false);
+            if (context.activity.text.toLowerCase() === 'exit') {
+                flow.currentOperation = operations.none;
+                const menuMsg = MessageFactory.text(
+                    'Current operation has been exited\n\n' +
+                    'This is Tsai CITY\'s Bot to help you navigate our website!\n\n' +
+                    'Type \'Quiz\' to take our innovator profile quiz\n\n' +
+                    'Type \'Question\' to ask a question'
+                );
+                await context.sendActivity(menuMsg);
+            } else {
+                switch (flow.currentOperation) {
+                // No operation is set
+                case operations.none: {
+                    // Set up the necessary operation based on input
+                    switch (context.activity.text.toLowerCase()) {
+                    case 'quiz': {
+                        flow.currentOperation = operations.quiz;
+                        await this.userState.saveChanges(context, false);
+                        await this.userPathwaysDialog.run(context, this.dialogState);
+                        break;
+                    }
+                    case 'question': {
+                        flow.currentOperation = operations.question;
+                        await context.sendActivity('What is your question?');
+                        break;
+                    }
+                    default: {
+                        const tryAgainMsg = MessageFactory.text(
+                            'That was an invalid command. Try again!\n\n' +
+                            'Type \'Quiz\' to take our innovator profile quiz\n\n' +
+                            'Type \'Question\' to ask a question'
+                        );
+                        await context.sendActivity(tryAgainMsg);
+                    }
+                    }
+                    break;
+                }
+                // Continue running the operation if there is one in progress
+                case operations.quiz: {
                     await this.userPathwaysDialog.run(context, this.dialogState);
                     break;
                 }
-                case 'Question': {
-                    flow.currentOperation = operations.question;
-                    await context.sendActivity('What is your question?');
+                case operations.question: {
+                    await this.qnaDialog.run(context, this.dialogState);
                     break;
                 }
-                default: {
-                    const tryAgainMsg = MessageFactory.text(
-                        'That was an invalid command. Try again!\n\n' +
-                        'Type \'Quiz\' to take our innovator profile quiz\n\n' +
-                        'Type \'Question\' to ask a question'
-                    );
-                    await context.sendActivity(tryAgainMsg);
                 }
-                }
-                break;
             }
-            // Continue running the operation if there is one in progress
-            case operations.quiz: {
-                await this.userPathwaysDialog.run(context, this.dialogState);
-                break;
-            }
-            case operations.question: {
-                await this.qnaDialog.run(context, this.dialogState);
-                break;
-            }
-            }
+
             await next();
         });
     }

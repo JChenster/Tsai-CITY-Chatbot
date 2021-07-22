@@ -59,7 +59,10 @@ class QNADialog extends ComponentDialog {
     // It kicks off the dialog with the QnA Maker with provided options.
     async startInitialDialog(step) {
         await step.beginDialog(QNAMAKER_BASE_DIALOG);
-        return await step.context.sendActivity('Ask another question:');
+        return await step.context.sendActivity(
+            'Ask another question:\n\n' +
+            'Or type \'Exit\' to stop asking quesstions'
+        );
     }
 }
 

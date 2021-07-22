@@ -158,7 +158,8 @@ class UserPathwaysDialog extends ComponentDialog {
             `Intrapreneur: ${ userProfile.intrapreneurScore }%\n\n` +
             `Explorer: ${ userProfile.explorerScore }%\n\n` +
             `Civic Innovator: ${ userProfile.civicInnovatorScore }%\n\n` +
-            `Artist: ${ userProfile.artistScore }%\n\n`;
+            `Artist: ${ userProfile.artistScore }%\n\n` +
+            'Type \'Exit\' to return to the main menu';
         await step.context.sendActivity(summaryMessage);
         return await step.endDialog();
     }
