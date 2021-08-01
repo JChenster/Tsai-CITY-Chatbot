@@ -1,5 +1,7 @@
 const { QnAMaker } = require('botbuilder-ai');
 const {
+    ChoiceFactory,
+    ChoicePrompt,
     ComponentDialog,
     DialogSet,
     DialogTurnStatus,
@@ -7,15 +9,16 @@ const {
 } = require('botbuilder-dialogs');
 
 // Dialog Constants
+const CHOICE_PROMPT = 'CHOICE_PROMPT';
 const WATERFALL_DIALOG = 'WATERFALL_DIALOG';
 
 // QnA Maker Options
 // Minimum score needed for an answer to be considered
 const SCORE_THRESHOLD = 0.1;
 // The highest number of answers to be considered given they all surpass the score threshold
-const TOP = 1;
+const TOP = 3;
 
-class QNADialog extends ComponentDialog {
+class ActiveLearningDialog extends ComponentDialog {
     constructor(qnaMaker) {
         super('qnaDialog');
 
@@ -35,8 +38,10 @@ class QNADialog extends ComponentDialog {
         };
 
         this.addDialog(new WaterfallDialog(WATERFALL_DIALOG, [
-            this.answerQuestionStep.bind(this)
+            this.answerQuestionStep.bind(this),
+            this.processBestAnswerStep.bind(this)
         ]));
+        this.addDialog(new ChoicePrompt(CHOICE_PROMPT));
     }
 
     /**
@@ -59,22 +64,54 @@ class QNADialog extends ComponentDialog {
 
     // Answers question
     async answerQuestionStep(step) {
-        const qnaResults = await this.qnaMaker.getAnswers(this.turnContext, this.qnaMakerOptions);
+        this.qnaResults = await this.qnaMaker.getAnswers(this.turnContext, this.qnaMakerOptions);
         this.currentQuestion = this.turnContext.activity.text;
 
         // Log pieces of information about QnA query to the console
         console.log('Current Question: ' + this.currentQuestion);
-        console.log(qnaResults);
+        console.log(this.qnaResults);
+        const numResults = this.qnaResults.length;
+        console.log(numResults + ' answers were returned');
 
         // If an answer was received from QnA Maker, send the answer back to the user.
-        if (qnaResults[0]) {
-            await step.context.sendActivity(qnaResults[0].answer);
+        if (numResults === 1) {
+            return await step.context.sendActivity(this.qnaResults[0].answer);
+        } else if (numResults > 1) {
+            for (let i = 0; i < numResults; i++) {
+                await step.context.sendActivity(`${ i + 1 }: ${ this.qnaResults[i].answer }`);
+            }
+            await step.context.sendActivity('Choose the best answer to your question:');
+            const answerChoices = [...Array(numResults).keys()].map(n => (n + 1).toString());
+            return await step.prompt(CHOICE_PROMPT, { choices: ChoiceFactory.toChoices(answerChoices) });
         // If no answers were returned from QnA Maker, reply with help.
         } else {
             await step.context.sendActivity('No answer could be found to your question.');
+            return await step.context.sendActivity('Ask another question! (Or type \'Exit\' to stop asking)');
+        }
+    }
+
+    async processBestAnswerStep(step) {
+        const bestAnswer = step.result.value;
+        if (bestAnswer !== 'undefined') {
+            await step.context.sendActivity(
+                `You chose ${ bestAnswer } as the best answer, thank you for your input!\n\n` +
+                'The QnA algorithm will be trained accordingly with your help.'
+            );
+            const feedbackRecords = {
+                FeedbackRecords: [
+                    {
+                        UserQuestion: this.currentQuestion,
+                        QnaId: this.qnaResults[bestAnswer - 1].id
+                    }
+                ]
+            };
+            console.log(feedbackRecords);
+            await this.qnaMaker.callTrain(feedbackRecords);
+        } else {
+            await step.context.sendActivity('You didn\'t choose a best answer');
         }
         return await step.context.sendActivity('Ask another question! (Or type \'Exit\' to stop asking)');
     }
 }
 
-module.exports.QNADialog = QNADialog;
+module.exports.ActiveLearningDialog = ActiveLearningDialog;

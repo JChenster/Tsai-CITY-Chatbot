@@ -3,6 +3,7 @@ const { ActivityHandler, MessageFactory } = require('botbuilder');
 const operations = {
     quiz: 'quiz',
     question: 'question',
+    activeLearning: 'activeLearning',
     none: 'none'
 };
 
@@ -12,7 +13,7 @@ class Bot extends ActivityHandler {
     * @param {UserState} userState
     * @param {Dialog} dialog
     */
-    constructor(conversationState, userState, userPathwaysDialog, qnaDialog) {
+    constructor(conversationState, userState, userPathwaysDialog, qnaDialog, activeLearningDialog) {
         super();
 
         this.conversationState = conversationState;
@@ -20,6 +21,7 @@ class Bot extends ActivityHandler {
         // Add different dialogs
         this.userPathwaysDialog = userPathwaysDialog;
         this.qnaDialog = qnaDialog;
+        this.activeLearningDialog = activeLearningDialog;
         // Store a record of this conversation
         this.dialogState = this.conversationState.createProperty('DialogState');
         // Operation state stores information on what function the bot is carrying out
@@ -34,8 +36,9 @@ class Bot extends ActivityHandler {
                 if (membersAdded[member].id !== context.activity.recipient.id) {
                     const welcomeMsg = MessageFactory.text(
                         'This is Tsai CITY\'s Bot to help you navigate our website!\n\n' +
-                        'Type \'Quiz\' to take our innovator profile quiz\n\n' +
-                        'Type \'Question\' to ask a question'
+                        '- Type \'Quiz\' to take our innovator profile quiz\n\n' +
+                        '- Type \'Question\' to ask a question\n\n' +
+                        '- Type \'Active\' to help train chatbot through active learning'
                     );
                     await context.sendActivity(welcomeMsg);
                 }
@@ -54,8 +57,9 @@ class Bot extends ActivityHandler {
                 const menuMsg = MessageFactory.text(
                     'Current operation has been exited\n\n' +
                     'This is Tsai CITY\'s Bot to help you navigate our website!\n\n' +
-                    'Type \'Quiz\' to take our innovator profile quiz\n\n' +
-                    'Type \'Question\' to ask a question'
+                    '- Type \'Quiz\' to take our innovator profile quiz\n\n' +
+                    '- Type \'Question\' to ask a question\n\n' +
+                    '- Type \'Active\' to help train chatbot through active learning'
                 );
                 await context.sendActivity(menuMsg);
             } else {
@@ -66,7 +70,6 @@ class Bot extends ActivityHandler {
                     switch (context.activity.text.toLowerCase()) {
                     case 'quiz': {
                         flow.currentOperation = operations.quiz;
-                        await this.userState.saveChanges(context, false);
                         await this.userPathwaysDialog.run(context, this.dialogState);
                         break;
                     }
@@ -75,11 +78,17 @@ class Bot extends ActivityHandler {
                         await context.sendActivity('What is your question?');
                         break;
                     }
+                    case 'active': {
+                        flow.currentOperation = operations.activeLearning;
+                        await context.sendActivity('What is your question?');
+                        break;
+                    }
                     default: {
                         const tryAgainMsg = MessageFactory.text(
                             'That was an invalid command. Try again!\n\n' +
-                            'Type \'Quiz\' to take our innovator profile quiz\n\n' +
-                            'Type \'Question\' to ask a question'
+                            '- Type \'Quiz\' to take our innovator profile quiz\n\n' +
+                            '- Type \'Question\' to ask a question\n\n' +
+                            '- Type \'Active\' to help train chatbot through active learning'
                         );
                         await context.sendActivity(tryAgainMsg);
                     }
@@ -95,9 +104,12 @@ class Bot extends ActivityHandler {
                     await this.qnaDialog.run(context, this.dialogState);
                     break;
                 }
+                case operations.activeLearning: {
+                    await this.activeLearningDialog.run(context, this.dialogState);
+                    break;
+                }
                 }
             }
-
             await next();
         });
     }

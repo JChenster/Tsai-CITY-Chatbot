@@ -15,6 +15,7 @@ const { BotFrameworkAdapter, MemoryStorage, ConversationState, UserState } = req
 const { UserPathwaysDialog } = require('./dialogs/userPathwaysDialog');
 const { Bot } = require('./bots/bot');
 const { QNADialog } = require('./dialogs/qnaDialog');
+const { ActiveLearningDialog } = require('./dialogs/activeLearningDialog');
 
 // Store information about
 // a user, accessible across all conversation
@@ -26,7 +27,8 @@ const userState = new UserState(memoryStorage);
 // Use custom classes
 const userPathwaysDialog = new UserPathwaysDialog(userState);
 const qnaDialog = new QNADialog();
-const bot = new Bot(conversationState, userState, userPathwaysDialog, qnaDialog);
+const activeLearningDialog = new ActiveLearningDialog();
+const bot = new Bot(conversationState, userState, userPathwaysDialog, qnaDialog, activeLearningDialog);
 
 // Create adapter.
 // See https://aka.ms/about-bot-adapter to learn more about how bots work.
