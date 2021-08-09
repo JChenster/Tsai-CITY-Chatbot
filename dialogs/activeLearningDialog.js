@@ -78,7 +78,7 @@ class ActiveLearningDialog extends ComponentDialog {
             return await step.context.sendActivity(this.qnaResults[0].answer);
         } else if (numResults > 1) {
             for (let i = 0; i < numResults; i++) {
-                await step.context.sendActivity(`${ i + 1 }: ${ this.qnaResults[i].answer }`);
+                await step.context.sendActivity(`${ i + 1 } (Score: ${ Math.round(this.qnaResults[i].score * 100) / 100 }): ${ this.qnaResults[i].answer }`);
             }
             await step.context.sendActivity('Choose the best answer to your question:');
             const answerChoices = [...Array(numResults).keys()].map(n => (n + 1).toString());
