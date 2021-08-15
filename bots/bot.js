@@ -1,9 +1,10 @@
-const { ActivityHandler, MessageFactory } = require('botbuilder');
+const { ActivityHandler, MessageFactory, BotFrameworkHttpClient } = require('botbuilder');
 
 const operations = {
     quiz: 'quiz',
     question: 'question',
     activeLearning: 'activeLearning',
+    luis: 'luis',
     none: 'none'
 };
 
@@ -13,7 +14,7 @@ class Bot extends ActivityHandler {
     * @param {UserState} userState
     * @param {Dialog} dialog
     */
-    constructor(conversationState, userState, userPathwaysDialog, qnaDialog, activeLearningDialog) {
+    constructor(conversationState, userState, userPathwaysDialog, qnaDialog, activeLearningDialog, luisDialog) {
         super();
 
         this.conversationState = conversationState;
@@ -22,6 +23,7 @@ class Bot extends ActivityHandler {
         this.userPathwaysDialog = userPathwaysDialog;
         this.qnaDialog = qnaDialog;
         this.activeLearningDialog = activeLearningDialog;
+        this.luisDialog = luisDialog;
         // Store a record of this conversation
         this.dialogState = this.conversationState.createProperty('DialogState');
         // Operation state stores information on what function the bot is carrying out
@@ -38,7 +40,8 @@ class Bot extends ActivityHandler {
                         'This is Tsai CITY\'s Bot to help you navigate our website!\n\n' +
                         '- Type \'Quiz\' to take our innovator profile quiz\n\n' +
                         '- Type \'Question\' to ask a question\n\n' +
-                        '- Type \'Active\' to help train chatbot through active learning'
+                        '- Type \'Active\' to help train chatbot through active learning\n\n' +
+                        '- Type \'LUIS\' to use LUIS natural language processing'
                     );
                     await context.sendActivity(welcomeMsg);
                 }
@@ -59,7 +62,8 @@ class Bot extends ActivityHandler {
                     'This is Tsai CITY\'s Bot to help you navigate our website!\n\n' +
                     '- Type \'Quiz\' to take our innovator profile quiz\n\n' +
                     '- Type \'Question\' to ask a question\n\n' +
-                    '- Type \'Active\' to help train chatbot through active learning'
+                    '- Type \'Active\' to help train chatbot through active learning\n\n' +
+                    '- Type \'LUIS\' to use LUIS natural language processing'
                 );
                 await context.sendActivity(menuMsg);
             } else {
@@ -83,12 +87,17 @@ class Bot extends ActivityHandler {
                         await context.sendActivity('What is your question?');
                         break;
                     }
+                    case 'luis':
+                        flow.currentOperation = operations.luis;
+                        await this.luisDialog.run(context, this.dialogState);
+                        break;
                     default: {
                         const tryAgainMsg = MessageFactory.text(
                             'That was an invalid command. Try again!\n\n' +
                             '- Type \'Quiz\' to take our innovator profile quiz\n\n' +
                             '- Type \'Question\' to ask a question\n\n' +
-                            '- Type \'Active\' to help train chatbot through active learning'
+                            '- Type \'Active\' to help train chatbot through active learning\n\n' +
+                            '- Type \'LUIS\' to use LUIS natural language processing'
                         );
                         await context.sendActivity(tryAgainMsg);
                     }
@@ -106,6 +115,10 @@ class Bot extends ActivityHandler {
                 }
                 case operations.activeLearning: {
                     await this.activeLearningDialog.run(context, this.dialogState);
+                    break;
+                }
+                case operations.luis: {
+                    await this.luisDialog.run(context, this.dialogState);
                     break;
                 }
                 }

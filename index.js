@@ -16,6 +16,8 @@ const { UserPathwaysDialog } = require('./dialogs/userPathwaysDialog');
 const { Bot } = require('./bots/bot');
 const { QNADialog } = require('./dialogs/qnaDialog');
 const { ActiveLearningDialog } = require('./dialogs/activeLearningDialog');
+const { LuisDialog } = require('./dialogs/luisDialog');
+const { LuisRecognizerHelper } = require('./dialogs/luisRecognizerHelper');
 
 // Store information about
 // a user, accessible across all conversation
@@ -28,7 +30,12 @@ const userState = new UserState(memoryStorage);
 const userPathwaysDialog = new UserPathwaysDialog(userState);
 const qnaDialog = new QNADialog();
 const activeLearningDialog = new ActiveLearningDialog();
-const bot = new Bot(conversationState, userState, userPathwaysDialog, qnaDialog, activeLearningDialog);
+
+// Set up LUIS
+const luisRecognizerHelper = new LuisRecognizerHelper();
+const luisDialog = new LuisDialog(luisRecognizerHelper);
+
+const bot = new Bot(conversationState, userState, userPathwaysDialog, qnaDialog, activeLearningDialog, luisDialog);
 
 // Create adapter.
 // See https://aka.ms/about-bot-adapter to learn more about how bots work.
