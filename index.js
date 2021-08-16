@@ -33,7 +33,7 @@ const activeLearningDialog = new ActiveLearningDialog();
 
 // Set up LUIS
 const luisRecognizerHelper = new LuisRecognizerHelper();
-const luisDialog = new LuisDialog(luisRecognizerHelper);
+const luisDialog = new LuisDialog(luisRecognizerHelper, userPathwaysDialog, qnaDialog);
 
 const bot = new Bot(conversationState, userState, userPathwaysDialog, qnaDialog, activeLearningDialog, luisDialog);
 

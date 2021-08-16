@@ -1,4 +1,4 @@
-const { ActivityHandler, MessageFactory, BotFrameworkHttpClient } = require('botbuilder');
+const { ActivityHandler, MessageFactory } = require('botbuilder');
 
 const operations = {
     quiz: 'quiz',
@@ -7,6 +7,10 @@ const operations = {
     luis: 'luis',
     none: 'none'
 };
+const MENU_OPTIONS = '- Type \'Quiz\' to take our innovator profile quiz\n\n' +
+    '- Type \'Question\' to ask a question\n\n' +
+    '- Type \'Active\' to help train chatbot through active learning\n\n' +
+    '- Type \'LUIS\' to use LUIS natural language processing';
 
 class Bot extends ActivityHandler {
     /*
@@ -36,13 +40,7 @@ class Bot extends ActivityHandler {
             for (let member = 0; member < membersAdded.length; member++) {
                 // Make sure member is not the bot itself
                 if (membersAdded[member].id !== context.activity.recipient.id) {
-                    const welcomeMsg = MessageFactory.text(
-                        'This is Tsai CITY\'s Bot to help you navigate our website!\n\n' +
-                        '- Type \'Quiz\' to take our innovator profile quiz\n\n' +
-                        '- Type \'Question\' to ask a question\n\n' +
-                        '- Type \'Active\' to help train chatbot through active learning\n\n' +
-                        '- Type \'LUIS\' to use LUIS natural language processing'
-                    );
+                    const welcomeMsg = MessageFactory.text('This is Tsai CITY\'s Bot to help you navigate our website!\n\n' + MENU_OPTIONS);
                     await context.sendActivity(welcomeMsg);
                 }
             }
@@ -60,10 +58,7 @@ class Bot extends ActivityHandler {
                 const menuMsg = MessageFactory.text(
                     'Current operation has been exited\n\n' +
                     'This is Tsai CITY\'s Bot to help you navigate our website!\n\n' +
-                    '- Type \'Quiz\' to take our innovator profile quiz\n\n' +
-                    '- Type \'Question\' to ask a question\n\n' +
-                    '- Type \'Active\' to help train chatbot through active learning\n\n' +
-                    '- Type \'LUIS\' to use LUIS natural language processing'
+                    MENU_OPTIONS
                 );
                 await context.sendActivity(menuMsg);
             } else {
@@ -92,13 +87,7 @@ class Bot extends ActivityHandler {
                         await this.luisDialog.run(context, this.dialogState);
                         break;
                     default: {
-                        const tryAgainMsg = MessageFactory.text(
-                            'That was an invalid command. Try again!\n\n' +
-                            '- Type \'Quiz\' to take our innovator profile quiz\n\n' +
-                            '- Type \'Question\' to ask a question\n\n' +
-                            '- Type \'Active\' to help train chatbot through active learning\n\n' +
-                            '- Type \'LUIS\' to use LUIS natural language processing'
-                        );
+                        const tryAgainMsg = MessageFactory.text('That was an invalid command. Try again!\n\n' + MENU_OPTIONS);
                         await context.sendActivity(tryAgainMsg);
                     }
                     }

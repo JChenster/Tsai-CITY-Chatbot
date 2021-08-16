@@ -3,10 +3,12 @@ const {
     ComponentDialog,
     DialogSet,
     DialogTurnStatus,
+    TextPrompt,
     WaterfallDialog
 } = require('botbuilder-dialogs');
 
 // Dialog Constants
+const TEXT_PROMPT = 'TEXT_PROMPT';
 const WATERFALL_DIALOG = 'WATERFALL_DIALOG';
 
 // QnA Maker Options
@@ -34,9 +36,12 @@ class QNADialog extends ComponentDialog {
             top: TOP
         };
 
-        this.addDialog(new WaterfallDialog(WATERFALL_DIALOG, [
-            this.answerQuestionStep.bind(this)
-        ]));
+        this.addDialog(new TextPrompt(TEXT_PROMPT))
+            .addDialog(new WaterfallDialog(WATERFALL_DIALOG, [
+                this.getQuestionStep.bind(this),
+                this.answerQuestionStep.bind(this)
+            ]));
+        this.initialDialogId = WATERFALL_DIALOG;
     }
 
     /**
@@ -57,13 +62,23 @@ class QNADialog extends ComponentDialog {
         }
     }
 
+    // Prompt the user to ask a question
+    async getQuestionStep(stepContext) {
+        if (stepContext.options.turnContext) {
+            this.turnContext = stepContext.options.turnContext;
+        }
+        console.log(this.turnContext);
+        return await stepContext.prompt(TEXT_PROMPT, { prompt: 'Ask a question:' });
+    }
+
     // Answers question
     async answerQuestionStep(step) {
+        console.log(this.turnContext);
         const qnaResults = await this.qnaMaker.getAnswers(this.turnContext, this.qnaMakerOptions);
-        this.currentQuestion = this.turnContext.activity.text;
+        const currentQuestion = this.turnContext.activity.text;
 
         // Log pieces of information about QnA query to the console
-        console.log('Current Question: ' + this.currentQuestion);
+        console.log('Current Question: ' + currentQuestion);
         console.log(qnaResults);
 
         // If an answer was received from QnA Maker, send the answer back to the user.

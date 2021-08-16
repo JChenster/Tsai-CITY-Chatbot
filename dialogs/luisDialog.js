@@ -11,13 +11,15 @@ const { LuisRecognizer } = require('botbuilder-ai');
 const WATERFALL_DIALOG = 'MAIN_WATERFALL_DIALOG';
 
 class LuisDialog extends ComponentDialog {
-    constructor(luisRecognizer) {
+    constructor(luisRecognizer, quizDialog, qnaDialog) {
         super('MainDialog');
 
         if (!luisRecognizer) throw new Error('[MainDialog]: Missing parameter \'luisRecognizer\' is required');
         this.luisRecognizer = luisRecognizer;
 
         this.addDialog(new TextPrompt('TextPrompt'))
+            .addDialog(quizDialog)
+            .addDialog(qnaDialog)
             .addDialog(new WaterfallDialog(WATERFALL_DIALOG, [
                 this.introStep.bind(this),
                 this.actStep.bind(this)//,
@@ -37,6 +39,8 @@ class LuisDialog extends ComponentDialog {
         dialogSet.add(this);
 
         const dialogContext = await dialogSet.createContext(turnContext);
+        // Save the turn context for access by QnA Dialog
+        this.turnContext = turnContext;
         const results = await dialogContext.continueDialog();
         if (results.status === DialogTurnStatus.empty) {
             await dialogContext.beginDialog(this.id);
@@ -64,19 +68,23 @@ class LuisDialog extends ComponentDialog {
     async actStep(stepContext) {
         // Call LUIS. (Note the TurnContext has the response to the prompt)
         const luisResult = await this.luisRecognizer.executeLuisQuery(stepContext.context);
-        switch (LuisRecognizer.topIntent(luisResult)) {
+        console.log(LuisRecognizer.sortedIntents(luisResult));
+        const topIntent = LuisRecognizer.topIntent(luisResult);
+        console.log(`Processed ${ topIntent } intent`);
+        switch (topIntent) {
         case 'PathwaysQuiz': {
-            console.log('Processed quiz intent');
-            break;
+            return await stepContext.beginDialog('userPathwaysDialog');
+        }
+        case 'Question': {
+            return await stepContext.beginDialog('qnaDialog', { turnContext: this.turnContext });
         }
         default: {
             // Catch all for unhandled intents
-            const didntUnderstandMessageText = `Sorry, I didn't get that. Please try asking in a different way (intent was ${ LuisRecognizer.topIntent(luisResult) })`;
+            const didntUnderstandMessageText = `Sorry, I didn't get that. Please try asking in a different way (intent was ${ topIntent })`;
             await stepContext.context.sendActivity(didntUnderstandMessageText, didntUnderstandMessageText, InputHints.IgnoringInput);
         }
         }
-
-        return await stepContext.next();
+        return await stepContext.replaceDialog(this.initialDialogId, { restartMsg: 'What else can I do for you?' });
     }
 }
 
