@@ -158,9 +158,9 @@ class UserPathwaysDialog extends ComponentDialog {
             `Intrapreneur: ${ userProfile.intrapreneurScore }%\n\n` +
             `Explorer: ${ userProfile.explorerScore }%\n\n` +
             `Civic Innovator: ${ userProfile.civicInnovatorScore }%\n\n` +
-            `Artist: ${ userProfile.artistScore }%\n\n` +
-            'Type \'Exit\' to return to the main menu';
+            `Artist: ${ userProfile.artistScore }%\n\n`;
         await step.context.sendActivity(summaryMessage);
+        await step.context.sendActivity('Type anything to exit the quiz and submit another LUIS query');
         return await step.endDialog();
     }
 

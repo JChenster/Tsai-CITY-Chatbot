@@ -35,7 +35,7 @@ const activeLearningDialog = new ActiveLearningDialog();
 const luisRecognizerHelper = new LuisRecognizerHelper();
 const luisDialog = new LuisDialog(luisRecognizerHelper, userPathwaysDialog, qnaDialog);
 
-const bot = new Bot(conversationState, userState, userPathwaysDialog, qnaDialog, activeLearningDialog, luisDialog);
+const bot = new Bot(conversationState, userState, activeLearningDialog, luisDialog);
 
 // Create adapter.
 // See https://aka.ms/about-bot-adapter to learn more about how bots work.

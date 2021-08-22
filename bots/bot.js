@@ -7,10 +7,9 @@ const operations = {
     luis: 'luis',
     none: 'none'
 };
-const MENU_OPTIONS = '- Type \'Quiz\' to take our innovator profile quiz\n\n' +
-    '- Type \'Question\' to ask a question\n\n' +
-    '- Type \'Active\' to help train chatbot through active learning\n\n' +
-    '- Type \'LUIS\' to use LUIS natural language processing';
+const MENU_OPTIONS =
+    '- Type \'LUIS\' to chat with our chatbot usisng LUIS natural language processing\n\n' +
+    '- Type \'Active\' to help train chatbot through active learning';
 
 class Bot extends ActivityHandler {
     /*
@@ -18,14 +17,12 @@ class Bot extends ActivityHandler {
     * @param {UserState} userState
     * @param {Dialog} dialog
     */
-    constructor(conversationState, userState, userPathwaysDialog, qnaDialog, activeLearningDialog, luisDialog) {
+    constructor(conversationState, userState, activeLearningDialog, luisDialog) {
         super();
 
         this.conversationState = conversationState;
         this.userState = userState;
         // Add different dialogs
-        this.userPathwaysDialog = userPathwaysDialog;
-        this.qnaDialog = qnaDialog;
         this.activeLearningDialog = activeLearningDialog;
         this.luisDialog = luisDialog;
         // Store a record of this conversation
@@ -67,16 +64,6 @@ class Bot extends ActivityHandler {
                 case operations.none: {
                     // Set up the necessary operation based on input
                     switch (context.activity.text.toLowerCase()) {
-                    case 'quiz': {
-                        flow.currentOperation = operations.quiz;
-                        await this.userPathwaysDialog.run(context, this.dialogState);
-                        break;
-                    }
-                    case 'question': {
-                        flow.currentOperation = operations.question;
-                        await context.sendActivity('What is your question?');
-                        break;
-                    }
                     case 'active': {
                         flow.currentOperation = operations.activeLearning;
                         await context.sendActivity('What is your question?');
@@ -94,14 +81,6 @@ class Bot extends ActivityHandler {
                     break;
                 }
                 // Continue running the operation if there is one in progress
-                case operations.quiz: {
-                    await this.userPathwaysDialog.run(context, this.dialogState);
-                    break;
-                }
-                case operations.question: {
-                    await this.qnaDialog.run(context, this.dialogState);
-                    break;
-                }
                 case operations.activeLearning: {
                     await this.activeLearningDialog.run(context, this.dialogState);
                     break;

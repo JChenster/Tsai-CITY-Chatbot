@@ -12,7 +12,7 @@ const WATERFALL_DIALOG = 'MAIN_WATERFALL_DIALOG';
 
 class LuisDialog extends ComponentDialog {
     constructor(luisRecognizer, quizDialog, qnaDialog) {
-        super('MainDialog');
+        super('LuisDialog');
 
         if (!luisRecognizer) throw new Error('[MainDialog]: Missing parameter \'luisRecognizer\' is required');
         this.luisRecognizer = luisRecognizer;

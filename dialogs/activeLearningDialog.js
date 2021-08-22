@@ -11,6 +11,7 @@ const {
 // Dialog Constants
 const CHOICE_PROMPT = 'CHOICE_PROMPT';
 const WATERFALL_DIALOG = 'WATERFALL_DIALOG';
+const NONE_APPLY = 'None Apply';
 
 // QnA Maker Options
 // Minimum score needed for an answer to be considered
@@ -20,7 +21,7 @@ const TOP = 3;
 
 class ActiveLearningDialog extends ComponentDialog {
     constructor(qnaMaker) {
-        super('qnaDialog');
+        super('activeLearningDialog');
 
         try {
             this.qnaMaker = new QnAMaker({
@@ -82,6 +83,7 @@ class ActiveLearningDialog extends ComponentDialog {
             }
             await step.context.sendActivity('Choose the best answer to your question:');
             const answerChoices = [...Array(numResults).keys()].map(n => (n + 1).toString());
+            answerChoices.push(NONE_APPLY);
             return await step.prompt(CHOICE_PROMPT, { choices: ChoiceFactory.toChoices(answerChoices) });
         // If no answers were returned from QnA Maker, reply with help.
         } else {
@@ -92,21 +94,24 @@ class ActiveLearningDialog extends ComponentDialog {
 
     async processBestAnswerStep(step) {
         const bestAnswer = step.result.value;
+        console.log(`Best answer: ${ bestAnswer }`);
         if (bestAnswer !== 'undefined') {
             await step.context.sendActivity(
                 `You chose ${ bestAnswer } as the best answer, thank you for your input!\n\n` +
                 'The QnA algorithm will be trained accordingly with your help.'
             );
-            const feedbackRecords = {
-                FeedbackRecords: [
-                    {
-                        UserQuestion: this.currentQuestion,
-                        QnaId: this.qnaResults[bestAnswer - 1].id
-                    }
-                ]
-            };
-            console.log(feedbackRecords);
-            await this.qnaMaker.callTrain(feedbackRecords);
+            if (bestAnswer !== NONE_APPLY) {
+                const feedbackRecords = {
+                    FeedbackRecords: [
+                        {
+                            UserQuestion: this.currentQuestion,
+                            QnaId: this.qnaResults[bestAnswer - 1].id
+                        }
+                    ]
+                };
+                console.log(feedbackRecords);
+                await this.qnaMaker.callTrain(feedbackRecords);
+            }
         } else {
             await step.context.sendActivity('You didn\'t choose a best answer');
         }
