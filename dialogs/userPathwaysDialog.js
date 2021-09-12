@@ -29,6 +29,8 @@ const EXPLORER_KEY = 3;
 const CIVIC_INNOVATOR_KEY = 4;
 const ARTIST_KEY = 5;
 
+const CHATBOT_TAG = 'Chatbot: ';
+
 class UserPathwaysDialog extends ComponentDialog {
     constructor(userState) {
         super('userPathwaysDialog');
@@ -68,63 +70,82 @@ class UserPathwaysDialog extends ComponentDialog {
     }
 
     async nameStep(step) {
-        return await step.prompt(NAME_PROMPT, 'Please enter your name');
+        this.luisDetails = step.options;
+        // console.log(this.luisDetails);
+        const namePrompt = 'Please enter your name';
+        this.luisDetails.flow.transcriptLog += (CHATBOT_TAG + namePrompt + '\n\n');
+        return await step.prompt(NAME_PROMPT, namePrompt);
     }
 
     async interestsStep(step) {
+        // console.log(this.luisDetails);
         step.values.name = step.result;
         // Greet user
-        await step.context.sendActivity(`Welcome ${ step.values.name }!`);
-        await step.context.sendActivity(
-            'How would you describe your interest in Tsai CITY?\n\n' +
+        const welcomeMsg = `Welcome ${ step.values.name }! There will be 4 multiple choice questions we need your answer to.`;
+        this.luisDetails.flow.transcriptLog += (CHATBOT_TAG + welcomeMsg + '\n\n');
+        await step.context.sendActivity(welcomeMsg);
+
+        const questionMsg = 'How would you describe your interest in Tsai CITY?\n\n' +
             'A. I’m just curious\n\n' +
             'B. I have an idea I want help developing\n\n' +
             'C. I want to unlock more creative ideas\n\n' +
             'D. I want to think differently about my field\n\n' +
-            'E. I want to learn how to make real change'
-        );
+            'E. I want to learn how to make real change';
+        this.luisDetails.flow.transcriptLog += (CHATBOT_TAG + questionMsg + '\n\n');
+        await step.context.sendActivity(questionMsg);
+
         const answerChoices = await this.genenerateAnswerChoices(5);
         return await step.prompt(CHOICE_PROMPT, { choices: ChoiceFactory.toChoices(answerChoices) });
     }
 
     async dreamCareerStep(step) {
+        // console.log(this.luisDetails);
         step.values.interests = step.result;
-        await step.context.sendActivity(
-            'What’s your dream career path?\n\n' +
+
+        const questionMsg = 'What’s your dream career path?\n\n' +
             'A. Founding a company or nonprofit\n\n' +
             'B. Joining a major organization and helping it think differently\n\n' +
             'C. Making pioneering creative work\n\n' +
             'D. Tackling injustices or systemic problems\n\n' +
-            'E. I’m not sure'
-        );
+            'E. I’m not sure';
+
+        this.luisDetails.flow.transcriptLog += (CHATBOT_TAG + questionMsg + '\n\n');
+        await step.context.sendActivity(questionMsg);
+
         const answerChoices = await this.genenerateAnswerChoices(5);
         return await step.prompt(CHOICE_PROMPT, { choices: ChoiceFactory.toChoices(answerChoices) });
     }
 
     async roleModelStep(step) {
+        // console.log(this.luisDetails);
         step.values.dreamCareer = step.result;
-        await step.context.sendActivity(
-            'Who would be your innovation role model?\n\n' +
+
+        const questionMsg = 'Who would be your innovation role model?\n\n' +
             'A. A manager who leads a team in a bold new direction\n\n' +
             'B. An entrepreneur who disrupts an industry\n\n' +
             'C. A playwright who pushes the boundaries of contemporary theater\n\n' +
             'D. A lifelong learner who synthesizes ideas from different fields and communities\n\n' +
-            'E. An activist who builds a movement from the ground up'
-        );
+            'E. An activist who builds a movement from the ground up';
+        await step.context.sendActivity(questionMsg);
+
+        this.luisDetails.flow.transcriptLog += (CHATBOT_TAG + questionMsg + '\n\n');
         const answerChoices = await this.genenerateAnswerChoices(5);
         return await step.prompt(CHOICE_PROMPT, { choices: ChoiceFactory.toChoices(answerChoices) });
     }
 
     async engagementStep(step) {
+        // console.log(this.luisDetails);
         step.values.roleModel = step.result;
-        await step.context.sendActivity(
-            'What style of engaging with Tsai CITY most appeals to you?\n\n' +
+
+        const questionMsg = 'What style of engaging with Tsai CITY most appeals to you?\n\n' +
             'A. I want to focus on my ideas, getting support to help me build them\n\n' +
             'B. I want to dabble and check out different opportunities\n\n' +
             'C. I want to take part in high-impact activities that help me build tangible skills\n\n' +
             'D. I want to connect with new people and perspectives to expand my thinking\n\n' +
-            'E. I want to find strategies for solving the real-world problems I care most about'
-        );
+            'E. I want to find strategies for solving the real-world problems I care most about';
+        await step.context.sendActivity(questionMsg);
+        this.luisDetails.flow.transcriptLog += (CHATBOT_TAG + questionMsg + '\n\n');
+
         const answerChoices = await this.genenerateAnswerChoices(5);
         return await step.prompt(CHOICE_PROMPT, { choices: ChoiceFactory.toChoices(answerChoices) });
     }
@@ -160,7 +181,13 @@ class UserPathwaysDialog extends ComponentDialog {
             `Civic Innovator: ${ userProfile.civicInnovatorScore }%\n\n` +
             `Artist: ${ userProfile.artistScore }%\n\n`;
         await step.context.sendActivity(summaryMessage);
-        await step.context.sendActivity('Type anything to exit the quiz and submit another LUIS query');
+        this.luisDetails.flow.transcriptLog += (CHATBOT_TAG + summaryMessage + '\n\n');
+
+        const exitMsg = 'Type anything to exit the quiz and submit another LUIS query';
+        this.luisDetails.flow.transcriptLog += (CHATBOT_TAG + exitMsg + '\n\n');
+        await step.context.sendActivity(exitMsg);
+
+        // console.log(this.luisDetails);
         return await step.endDialog();
     }
 

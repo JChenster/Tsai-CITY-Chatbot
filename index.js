@@ -12,11 +12,11 @@ const restify = require('restify');
 const { BotFrameworkAdapter, MemoryStorage, ConversationState, UserState } = require('botbuilder');
 
 // Import custom classes
-const { UserPathwaysDialog } = require('./dialogs/userPathwaysDialog');
 const { Bot } = require('./bots/bot');
-const { QNADialog } = require('./dialogs/qnaDialog');
 const { ActiveLearningDialog } = require('./dialogs/activeLearningDialog');
 const { LuisDialog } = require('./dialogs/luisDialog');
+const { UserPathwaysDialog } = require('./dialogs/userPathwaysDialog');
+const { QNADialog } = require('./dialogs/qnaDialog');
 const { LuisRecognizerHelper } = require('./dialogs/luisRecognizerHelper');
 
 // Store information about

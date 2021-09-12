@@ -20,6 +20,8 @@ const SCORE_THRESHOLD = 0.1;
 // The highest number of answers to be considered given they all surpass the score threshold
 const TOP = 1;
 
+const CHATBOT_TAG = 'Chatbot: ';
+
 /**
  * Creates QnAMakerDialog instance with provided configuraton values.
  */
@@ -73,7 +75,6 @@ class QNADialog extends ComponentDialog {
         dialogSet.add(this);
 
         const dialogContext = await dialogSet.createContext(turnContext);
-        this.turnContext = turnContext;
         const results = await dialogContext.continueDialog();
         if (results.status === DialogTurnStatus.empty) {
             await dialogContext.beginDialog(this.id);
@@ -82,13 +83,18 @@ class QNADialog extends ComponentDialog {
 
     // Prompt the user to ask a question
     async getQuestionStep(step) {
-        return await step.prompt(TEXT_PROMPT, { prompt: 'Ask a question:' });
+        console.log(step.options);
+        const luisDetails = step.options;
+        const questionPrompt = 'Ask a question:';
+        luisDetails.flow.transcriptLog += (CHATBOT_TAG + questionPrompt + '\n\n');
+        return await step.prompt(TEXT_PROMPT, { prompt: questionPrompt });
     }
 
     // Answers question
     async answerQuestionStep(step) {
+        // Need a mechanism to be able to log the answers that the chatbot provides
         await step.beginDialog(QNAMAKER_BASE_DIALOG);
-        await step.context.sendActivity('Type anything to exit asking questions and submit another LUIS query');
+        await step.context.sendActivity('Type anything to stop asking questions and submit another LUIS query');
         return await step.endDialog();
     }
 }

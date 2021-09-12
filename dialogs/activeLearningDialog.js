@@ -115,7 +115,7 @@ class ActiveLearningDialog extends ComponentDialog {
         } else {
             await step.context.sendActivity('You didn\'t choose a best answer');
         }
-        return await step.context.sendActivity('Ask another question! (Or type \'Exit\' to stop asking)');
+        return await step.context.sendActivity('Ask another question! (Or type "Exit" to exit active training)');
     }
 }
 

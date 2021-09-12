@@ -1,4 +1,5 @@
 const { ActivityHandler, MessageFactory } = require('botbuilder');
+const nodemailer = require('nodemailer');
 
 const operations = {
     quiz: 'quiz',
@@ -8,8 +9,14 @@ const operations = {
     none: 'none'
 };
 const MENU_OPTIONS =
-    '- Type \'LUIS\' to chat with our chatbot usisng LUIS natural language processing\n\n' +
+    '- Type \'LUIS\' to chat with our chatbot using LUIS natural language processing\n\n' +
     '- Type \'Active\' to help train chatbot through active learning';
+
+const CHATBOT_TAG = 'Chatbot: ';
+const USER_TAG = 'You: ';
+
+const DUMMY_EMAIL_USER = 'dalton.mosciski68@ethereal.email';
+const DUMMY_EMAIL_PASS = 'zCrv1gGH9XA21W4ayq';
 
 class Bot extends ActivityHandler {
     /*
@@ -30,6 +37,18 @@ class Bot extends ActivityHandler {
         // Operation state stores information on what function the bot is carrying out
         // Different from user to user
         this.operationState = this.userState.createProperty('OperationState');
+        // Transcript state stores the transcript of the chatbot conversation to then email
+        this.transcriptState = this.userState.createProperty('TranscriptState');
+        // Set up the necessary objects to be able send emails of conversation history
+        this.nodemailerTransporter = nodemailer.createTransport({
+            host: 'smtp.ethereal.email',
+            port: 587,
+            secure: false,
+            auth: {
+                user: DUMMY_EMAIL_USER,
+                pass: DUMMY_EMAIL_PASS
+            }
+        });
 
         // Send a welcome message
         this.onMembersAdded(async (context, next) => {
@@ -47,17 +66,30 @@ class Bot extends ActivityHandler {
         this.onMessage(async (context, next) => {
             // currentOperation attribute stores the current operation that the chatbot is running
             // this is a UserState is uniquely stored for each user
-            const flow = await this.operationState.get(context, { currentOperation: operations.none });
+            const flow = await this.operationState.get(context, {
+                currentOperation: operations.none,
+                transcriptLog: ''
+            });
+
+            if (context.activity.text) {
+                flow.transcriptLog += (USER_TAG + context.activity.text + '\n\n');
+            }
             console.log('Current operation: ' + flow.currentOperation);
 
             if (context.activity.text.toLowerCase() === 'exit') {
                 flow.currentOperation = operations.none;
-                const menuMsg = MessageFactory.text(
-                    'Current operation has been exited\n\n' +
+                const menuMsg = 'Current operation has been exited\n\n' +
                     'This is Tsai CITY\'s Bot to help you navigate our website!\n\n' +
-                    MENU_OPTIONS
-                );
-                await context.sendActivity(menuMsg);
+                    MENU_OPTIONS;
+                await context.sendActivity(MessageFactory.text(menuMsg));
+
+                flow.transcriptLog += (CHATBOT_TAG + menuMsg + '\n\n');
+
+                // For testing
+                console.log(flow);
+                console.log('Transcript Log:\n' + flow.transcriptLog);
+
+                await this.sendEmailTranscript(flow.transcriptLog);
             } else {
                 switch (flow.currentOperation) {
                 // No operation is set
@@ -66,16 +98,19 @@ class Bot extends ActivityHandler {
                     switch (context.activity.text.toLowerCase()) {
                     case 'active': {
                         flow.currentOperation = operations.activeLearning;
-                        await context.sendActivity('What is your question?');
+                        const askQuestionPrompt = 'Ask a question to train the chatbot on:';
+                        await context.sendActivity(askQuestionPrompt);
+                        flow.transcriptLog += (CHATBOT_TAG + askQuestionPrompt + '\n\n');
                         break;
                     }
                     case 'luis':
                         flow.currentOperation = operations.luis;
-                        await this.luisDialog.run(context, this.dialogState);
+                        await this.luisDialog.run(context, this.dialogState, flow);
                         break;
                     default: {
                         const tryAgainMsg = MessageFactory.text('That was an invalid command. Try again!\n\n' + MENU_OPTIONS);
                         await context.sendActivity(tryAgainMsg);
+                        flow.transcriptLog += (CHATBOT_TAG + tryAgainMsg + '\n\n');
                     }
                     }
                     break;
@@ -86,13 +121,28 @@ class Bot extends ActivityHandler {
                     break;
                 }
                 case operations.luis: {
-                    await this.luisDialog.run(context, this.dialogState);
+                    await this.luisDialog.run(context, this.dialogState, flow);
                     break;
                 }
                 }
             }
             await next();
         });
+    }
+
+    async sendEmailTranscript(transcriptLog) {
+        let transcriptLogHTML = transcriptLog.split(CHATBOT_TAG).join(`<b>${ CHATBOT_TAG }</b>`);
+        transcriptLogHTML = transcriptLogHTML.split(USER_TAG).join(`<b>${ USER_TAG }</b>`);
+        transcriptLogHTML = transcriptLogHTML.split('\n\n').join('<br/>');
+        const info = await this.nodemailerTransporter.sendMail({
+            from: DUMMY_EMAIL_USER,
+            to: 'Jeffrey.Chen.009@gmail.com',
+            subject: 'Tsai CITY Chatbot Conversation Transcript',
+            text: transcriptLog,
+            html: transcriptLogHTML
+        });
+        console.log('Message sent: %s', info.messageId);
+        console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
     }
 
     // Store changes to conversation and user state memory
