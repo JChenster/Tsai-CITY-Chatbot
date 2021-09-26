@@ -1,5 +1,5 @@
 class UserProfile {
-    constructor(name, entrepreneurScore, intrapreneurScore, explorerScore, civicInnovatorScore, artistScore){
+    constructor(name, entrepreneurScore, intrapreneurScore, explorerScore, civicInnovatorScore, artistScore) {
         this.name = name;
         this.entrepreneurScore = entrepreneurScore;
         this.intrapreneurScore = intrapreneurScore;

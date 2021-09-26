@@ -31,6 +31,10 @@ const ARTIST_KEY = 5;
 
 const CHATBOT_TAG = 'Chatbot: ';
 
+/* At a high level, this is a dialog that conducts the user pathways quiz
+    Prompts the user to enter their name, answer some quiz questions, and calculates their innovator profilew
+*/
+
 class UserPathwaysDialog extends ComponentDialog {
     constructor(userState) {
         super('userPathwaysDialog');
@@ -71,14 +75,13 @@ class UserPathwaysDialog extends ComponentDialog {
 
     async nameStep(step) {
         this.luisDetails = step.options;
-        // console.log(this.luisDetails);
+
         const namePrompt = 'Please enter your name';
         this.luisDetails.flow.transcriptLog += (CHATBOT_TAG + namePrompt + '\n\n');
         return await step.prompt(NAME_PROMPT, namePrompt);
     }
 
     async interestsStep(step) {
-        // console.log(this.luisDetails);
         step.values.name = step.result;
         // Greet user
         const welcomeMsg = `Welcome ${ step.values.name }! There will be 4 multiple choice questions we need your answer to.`;
@@ -99,7 +102,6 @@ class UserPathwaysDialog extends ComponentDialog {
     }
 
     async dreamCareerStep(step) {
-        // console.log(this.luisDetails);
         step.values.interests = step.result;
 
         const questionMsg = 'What’s your dream career path?\n\n' +
@@ -117,7 +119,6 @@ class UserPathwaysDialog extends ComponentDialog {
     }
 
     async roleModelStep(step) {
-        // console.log(this.luisDetails);
         step.values.dreamCareer = step.result;
 
         const questionMsg = 'Who would be your innovation role model?\n\n' +
@@ -134,7 +135,6 @@ class UserPathwaysDialog extends ComponentDialog {
     }
 
     async engagementStep(step) {
-        // console.log(this.luisDetails);
         step.values.roleModel = step.result;
 
         const questionMsg = 'What style of engaging with Tsai CITY most appeals to you?\n\n' +
@@ -187,7 +187,6 @@ class UserPathwaysDialog extends ComponentDialog {
         this.luisDetails.flow.transcriptLog += (CHATBOT_TAG + exitMsg + '\n\n');
         await step.context.sendActivity(exitMsg);
 
-        // console.log(this.luisDetails);
         return await step.endDialog();
     }
 

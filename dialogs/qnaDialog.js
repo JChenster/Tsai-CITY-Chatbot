@@ -83,7 +83,6 @@ class QNADialog extends ComponentDialog {
 
     // Prompt the user to ask a question
     async getQuestionStep(step) {
-        console.log(step.options);
         const luisDetails = step.options;
         const questionPrompt = 'Ask a question:';
         luisDetails.flow.transcriptLog += (CHATBOT_TAG + questionPrompt + '\n\n');
@@ -92,7 +91,7 @@ class QNADialog extends ComponentDialog {
 
     // Answers question
     async answerQuestionStep(step) {
-        // Need a mechanism to be able to log the answers that the chatbot provides
+        // TO DO: Need a mechanism to be able to log the answers that the chatbot provides
         await step.beginDialog(QNAMAKER_BASE_DIALOG);
         await step.context.sendActivity('Type anything to stop asking questions and submit another LUIS query');
         return await step.endDialog();
