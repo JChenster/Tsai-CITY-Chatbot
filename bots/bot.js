@@ -15,6 +15,7 @@ const MENU_OPTIONS =
 const CHATBOT_TAG = 'Chatbot: ';
 const USER_TAG = 'You: ';
 
+// Dummy email user and password credentials to test emailing functionality
 const DUMMY_EMAIL_USER = 'dalton.mosciski68@ethereal.email';
 const DUMMY_EMAIL_PASS = 'zCrv1gGH9XA21W4ayq';
 
@@ -95,6 +96,8 @@ class Bot extends ActivityHandler {
                 // No operation is set
                 case operations.none: {
                     // Set up the necessary operation based on input
+                    // Reads in the user's input and enters the appropriate chatbot mode
+                    // Either active learning or general purpose LUIS
                     switch (context.activity.text.toLowerCase()) {
                     case 'active': {
                         flow.currentOperation = operations.activeLearning;
@@ -107,6 +110,7 @@ class Bot extends ActivityHandler {
                         flow.currentOperation = operations.luis;
                         await this.luisDialog.run(context, this.dialogState, flow);
                         break;
+                    // If command was invalid, prompt user to try again
                     default: {
                         const tryAgainMsg = MessageFactory.text('That was an invalid command. Try again!\n\n' + MENU_OPTIONS);
                         await context.sendActivity(tryAgainMsg);
@@ -130,13 +134,17 @@ class Bot extends ActivityHandler {
         });
     }
 
+    /* Sends a transcript of the current conversation via email
+        Email recipient in its current form is hard-coded in, function can easily be rewritten to take in
+        recipient as a parameters
+    */
     async sendEmailTranscript(transcriptLog) {
         let transcriptLogHTML = transcriptLog.split(CHATBOT_TAG).join(`<b>${ CHATBOT_TAG }</b>`);
         transcriptLogHTML = transcriptLogHTML.split(USER_TAG).join(`<b>${ USER_TAG }</b>`);
         transcriptLogHTML = transcriptLogHTML.split('\n\n').join('<br/>');
         const info = await this.nodemailerTransporter.sendMail({
             from: DUMMY_EMAIL_USER,
-            to: 'Jeffrey.Chen.009@gmail.com',
+            to: DUMMY_EMAIL_USER,
             subject: 'Tsai CITY Chatbot Conversation Transcript',
             text: transcriptLog,
             html: transcriptLogHTML
